@@ -1,0 +1,47 @@
+# This is a sample build configuration for PHP.
+# Check our guides at https://confluence.atlassian.com/x/e8YWN for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+# 
+# 
+# For Just-wallet project
+image: php:7.1.1
+
+pipelines:
+  default:
+    - step:
+        name: Default for Staging
+        deployment: Staging
+        caches:
+          - composer
+        script:
+          - php -v
+          - apt-get update -y
+          - apt-get install -y ssh
+          - apt install git -y
+          - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+        services: 
+          - mysql 
+  branches:
+    staging:
+      - step:
+          image: brenix/alpine-bash-git-ssh
+          name: Staging on Dev branch
+          deployment: staging
+          script:
+            - cat ./deploy-staging.sh | ssh -tt <username>@<host>
+            - echo "Dev branch on staging!"
+    master:
+      - step:
+          name: Master branch on staging
+          deployment: staging
+          script:
+            - echo "Master branch on staging!" 
+definitions: 
+  services: 
+    mysql: 
+      image: mysql:5.7
+      environment: 
+        MYSQL_DATABASE: project 
+        MYSQL_ROOT_PASSWORD: root
